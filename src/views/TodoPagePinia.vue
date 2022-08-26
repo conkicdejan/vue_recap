@@ -2,55 +2,77 @@
   <div class="home">
     <h1>To do list</h1>
 
-    <!-- Ispisuje koliko je jos taskova ostalo da se uradi -->
-    <h3 v-if="todoStore.countUncomplete">
-      You have {{ todoStore.countUncomplete }}
-      {{ todoStore.countUncomplete > 1 ? 'tasks' : 'task' }} to do
+    <!-- Show number of remaining tasks -->
+    <h3 v-if="countUncomplete">
+      You have {{ countUncomplete }}
+      {{ countUncomplete > 1 ? 'tasks' : 'task' }} to do
     </h3>
     <h3 v-else>All done!</h3>
 
-    <!-- Jednostavna forma sa jednim text input poljem i add button -->
+    <!-- Simple form with one input field and submit button -->
     <form @submit.prevent="handleSubmit">
       <label for="input">Enter new task</label>
-      <input
-        type="text"
-        id="input"
-        name="input"
-        v-model="todoStore.input"
-        @keyup="handleInput"
-      />
+      <input type="text" id="input" name="input" v-model="input" />
       <button type="submit">Add task</button>
 
-      <!-- Ispisuje gresku za input polje ako greska postoji u state -->
-      <div v-for="error in todoStore.errors" :key="error">
+      <!-- Show error if any -->
+      <div v-for="error in errors" :key="error">
         <p class="error" v-if="error.input">
           {{ error.input }}
         </p>
       </div>
     </form>
 
-    <TodoList />
+    <TodoList
+      :items="items"
+      @toggleComplete="handleToggleComplete"
+      @itemDelete="handleDelete"
+    />
   </div>
 </template>
 
 <script setup>
-import { useTodoStore } from '@/store/TodoStore';
+import { ref } from '@vue/reactivity';
+import { computed } from 'vue';
 import TodoList from '@/components/TodoList.vue';
-const todoStore = useTodoStore();
 
-// Setuje vrednost input polja u state
-const handleInput = () => {
-  todoStore.setInput(input.value);
-};
+components: {
+  TodoList;
+}
+// Initail state
+const input = ref('');
+const items = ref([]);
+const errors = ref([]);
 
-//Submit forme, ako je input empty setuje error u state, ako je input ok dodaje task u items niz u state
+// Submit form, if there is error -> set error property, if there is no error -> add task to items property
 const handleSubmit = (e) => {
-  if (todoStore.input.length === 0) {
-    todoStore.addError({ input: 'Please enter some text' });
+  errors.value = [];
+  if (input.value.length === 0) {
+    errors.value.push({ input: 'Please enter some text' });
     return;
   }
-  todoStore.addItem();
+  items.value.push({ title: input.value, done: false });
+  input.value = '';
 };
+
+// Delete task handler
+const handleDelete = (i) => {
+  items.value = items.value.filter((item) => item !== i);
+};
+
+// Toggle handler complete/uncomplete
+const handleToggleComplete = (item) => {
+  item.done = !item.done;
+};
+
+// Count uncompleted tasks (computed property)
+const countUncomplete = computed(() => {
+  console.log(items);
+  return items.value.reduce(
+    (count, item) => count + (item.done === false ? 1 : 0),
+    0
+  );
+});
 </script>
 
 <style>
