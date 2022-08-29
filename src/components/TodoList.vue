@@ -1,6 +1,6 @@
 <template>
   <ul>
-    <div v-for="item in props.items" :key="item">
+    <div v-for="item in items" :key="item">
       <TodoItem
         :item="item"
         @toggleComplete="handleToggleComplete"
@@ -13,6 +13,7 @@
 <script setup>
 import { ref } from '@vue/reactivity';
 import TodoItem from './TodoItem.vue';
+import { inject } from 'vue';
 const emit = defineEmits(['itemDelete', 'toggleComplete']);
 
 components: {
@@ -21,6 +22,9 @@ components: {
 
 // Receiving props
 const props = defineProps(['items']);
+
+// Inject items
+const items = inject('items');
 
 // Emit delete event
 const handleDelete = (item) => {
